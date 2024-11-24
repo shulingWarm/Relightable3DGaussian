@@ -163,7 +163,7 @@ void construct_bvh(
     thrust::device_ptr<aabb_type> aabbs_ptr = thrust::device_pointer_cast(aabbs_internal);
     const auto aabb_whole = thrust::reduce(
             aabbs_ptr + num_internal_nodes, aabbs_ptr + num_nodes, default_aabb,
-            [] __device__ (const aabb_type& lhs, const aabb_type& rhs) {
+            [] __host__ __device__ (const aabb_type& lhs, const aabb_type& rhs) {
                 return merge(lhs, rhs);
             });
     thrust::device_vector<uint32_t> morton32(num_objects);

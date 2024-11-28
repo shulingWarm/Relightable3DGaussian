@@ -100,11 +100,43 @@ class Scene:
 
     # 自己实现的载入scene的方法，主要是用于debug的
     def customLoad(self):
+        #当前工程的模型位置
+        self.model_path = "/media/zzh/data/temp/RelightModelPath/"
         #读取colmap的工程
         colmap_project = sceneLoadTypeCallbacks["Colmap"]("/media/zzh/data/temp/phone_workspace/",
             "/media/zzh/data/temp/images/", False,
             debug=False)
-        print(colmap_project)
+        #读取点云内容
+        with open(colmap_project.ply_path, 'rb') as src_file, open(os.path.join(self.model_path, "input.ply"),
+                                                               'wb') as dest_file:
+            dest_file.write(src_file.read())
+        json_cams = []
+        camlist = []
+        if colmap_project.test_cameras:
+            camlist.extend(colmap_project.test_cameras)
+        if colmap_project.train_cameras:
+            camlist.extend(colmap_project.train_cameras)
+        for id, cam in enumerate(camlist):
+            json_cams.append(camera_to_JSON(id, cam))
+        with open(os.path.join(self.model_path, "cameras.json"), 'w') as file:
+            json.dump(json_cams, file)
+
+        #打乱图片序列
+        random.shuffle(colmap_project.train_cameras)  # Multi-res consistent random shuffling
+        random.shuffle(colmap_project.test_cameras)  # Multi-res consistent random shuffling
+
+        #获取相机的扩展，但目前并不知道这是做什么用的
+        self.cameras_extent = scene_info.nerf_normalization["radius"]
+
+        #载入不同层级的相机分辨率
+        print("Loading Training Cameras")
+        self.train_cameras[1.0] = cameraList_from_camInfos(colmap_project.train_cameras, resolution_scale,
+                                                                        args)
+        print("Loading Test Cameras")
+        self.test_cameras[1.0] = cameraList_from_camInfos(colmap_project.test_cameras, resolution_scale,
+                                                                       args)
+
+
 
     def save(self, iteration):
         point_cloud_path = os.path.join(self.model_path, "point_cloud/iteration_{}".format(iteration))

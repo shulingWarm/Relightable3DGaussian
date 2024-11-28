@@ -109,11 +109,14 @@ def readColmapCameras(cam_extrinsics, cam_intrinsics, images_folder, debug=False
         image = load_img_rgb(image_path)
 
         mask_path = os.path.join(os.path.dirname(images_folder), "masks", os.path.basename(extr.name))
-        mask = 1.0 - load_mask_bool(mask_path) / 255
-        image = image * mask
+        # mask = 1.0 - load_mask_bool(mask_path) / 255
+        # image = image * mask
         cam_info = CameraInfo(uid=uid, R=R, T=T, FovX=Fovx, FovY=FovY, fx=focal_length_x, fy=focal_length_y, cx=ppx,
                               cy=ppy, image=image, image_path=image_path, image_name=image_name, width=width, height=height,
-                              image_mask=mask)
+                              image_mask=None)
+        # cam_info = CameraInfo(uid=uid, R=R, T=T, FovX=Fovx, FovY=FovY, fx=focal_length_x, fy=focal_length_y, cx=ppx,
+        #                       cy=ppy, image=image, image_path=image_path, image_name=image_name, width=width, height=height,
+        #                       image_mask=mask)
         cam_infos.append(cam_info)
 
         if debug and idx >= 5:

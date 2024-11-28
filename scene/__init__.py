@@ -23,10 +23,14 @@ class Scene:
     gaussians: GaussianModel
 
     def __init__(self, args: ModelParams, gaussians: GaussianModel, load_iteration=None, shuffle=True,
-                 resolution_scales=[1.0]):
+                 resolution_scales=[1.0], custom_load = False):
         """b
         :param path: Path to colmap scene main folder.
         """
+        # 判断是不是使用自定义的加载方法
+        if(custom_load):
+            self.customLoad()
+            return
         self.model_path = args.model_path
         self.loaded_iter = None
         self.gaussians = gaussians
@@ -93,6 +97,14 @@ class Scene:
                                                                            args)
 
         self.scene_info = scene_info
+
+    # 自己实现的载入scene的方法，主要是用于debug的
+    def customLoad(self):
+        #读取colmap的工程
+        colmap_project = sceneLoadTypeCallbacks["Colmap"]("/media/zzh/data/temp/phone_workspace/",
+            "/media/zzh/data/temp/images/", False,
+            debug=False)
+        print(colmap_project)
 
     def save(self, iteration):
         point_cloud_path = os.path.join(self.model_path, "point_cloud/iteration_{}".format(iteration))

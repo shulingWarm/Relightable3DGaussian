@@ -19,6 +19,12 @@ from utils.system_utils import searchForMaxIteration
 from utils.camera_utils import cameraList_from_camInfos, camera_to_JSON
 
 
+#读取camera list时用到的args
+class CameraListParams:
+    def __init__(self):
+        self.resolution=-1
+        self.data_device='cuda'
+
 class Scene:
     gaussians: GaussianModel
 
@@ -126,15 +132,23 @@ class Scene:
         random.shuffle(colmap_project.test_cameras)  # Multi-res consistent random shuffling
 
         #获取相机的扩展，但目前并不知道这是做什么用的
-        self.cameras_extent = scene_info.nerf_normalization["radius"]
+        self.cameras_extent = colmap_project.nerf_normalization["radius"]
+
+        # 初始化训练相机和测试相机的空字典
+        self.train_cameras = {}
+        self.test_cameras = {}
 
         #载入不同层级的相机分辨率
+        cameraArgs = CameraListParams()
         print("Loading Training Cameras")
-        self.train_cameras[1.0] = cameraList_from_camInfos(colmap_project.train_cameras, resolution_scale,
-                                                                        args)
+        self.train_cameras[1.0] = cameraList_from_camInfos(colmap_project.train_cameras, 1.0,
+                                                                        cameraArgs)
         print("Loading Test Cameras")
-        self.test_cameras[1.0] = cameraList_from_camInfos(colmap_project.test_cameras, resolution_scale,
-                                                                       args)
+        self.test_cameras[1.0] = cameraList_from_camInfos(colmap_project.test_cameras, 1.0,
+                                                                       cameraArgs)
+
+        #记录自身的场景信息
+        self.scene_info = colmap_project
 
 
 

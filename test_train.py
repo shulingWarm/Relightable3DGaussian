@@ -23,6 +23,19 @@ from lpipsPyTorch import lpips
 from scene.utils import save_render_orb, save_depth_orb, save_normal_orb, save_albedo_orb, save_roughness_orb
 
 
+#用于读取args默认值的结构体
+class FakeArgs:
+    def __init__(self):
+        self.type = 'render'
+        self.gui = True
+        #处理debug的东西，一般是用不到的
+        self.debug_from = -1
+        self.save_interval = 5000
+        #迭代的总次数
+        self.iterations = 20000
+        #记录checkpoint的位置
+        self.checkpoint_interval = 100000
+
 def training(pointcloudPath):
     #初始化高斯模型的壳子
     render_type = 'render'
@@ -32,59 +45,31 @@ def training(pointcloudPath):
     gaussians.load_ply(pointcloudPath)
     #尝试加载一个简单的scene
     scene = Scene(None,gaussians,custom_load = True)
-    print('Load scene ok')
-    exit()
     
     first_iter = 0
-    tb_writer = prepare_output_and_logger(dataset)
-
-    """
-    Setup Gaussians
-    """
-    gaussians = GaussianModel(dataset.sh_degree, render_type=args.type)
-    scene = Scene(dataset, gaussians)
-    if args.checkpoint:
-        print("Create Gaussians from checkpoint {}".format(args.checkpoint))
-        first_iter = gaussians.create_from_ckpt(args.checkpoint, restore_optimizer=True)
-
-    elif scene.loaded_iter:
-        gaussians.load_ply(os.path.join(dataset.model_path,
-                                        "point_cloud",
-                                        "iteration_" + str(scene.loaded_iter),
-                                        "point_cloud.ply"))
-    else:
-        gaussians.create_from_pcd(scene.scene_info.point_cloud, scene.cameras_extent)
-
+    #从点云里面初始化三维高斯
+    gaussians.create_from_pcd(scene.scene_info.point_cloud, scene.cameras_extent)
+    #新建优化器参数必要的parser
+    parser = ArgumentParser(description="Training script parameters")
+    #初始化优化器参数
+    opt = OptimizationParams(parser)
+    #初始化训练的优化器
     gaussians.training_setup(opt)
+    #准备后续会用到的args
+    args = FakeArgs()
+    #新建一个pipeline参数
+    pipe = PipelineParams(parser)
+    #后续会用到的控制变量
+    is_pbr = False
 
     """
     Setup PBR components
     """
     pbr_kwargs = dict()
-    if is_pbr:
-        
-        # first update visibility
-        gaussians.update_visibility(pipe.sample_num)
-        
-        pbr_kwargs['sample_num'] = pipe.sample_num
-        print("Using global incident light for regularization.")
-        direct_env_light = DirectLightMap(dataset.env_resolution, opt.light_init)
-        
-        if args.checkpoint:
-            env_checkpoint = os.path.dirname(args.checkpoint) + "/env_light_" + os.path.basename(args.checkpoint)
-            print("Trying to load global incident light from ", env_checkpoint)
-            if os.path.exists(env_checkpoint):
-                direct_env_light.create_from_ckpt(env_checkpoint, restore_optimizer=True)
-                print("Successfully loaded!")
-            else:
-                print("Failed to load!")
-
-            direct_env_light.training_setup(opt)
-            pbr_kwargs["env_light"] = direct_env_light
 
     """ Prepare render function and bg"""
     render_fn = render_fn_dict[args.type]
-    bg_color = [1, 1, 1] if dataset.white_background else [0, 0, 0]
+    bg_color = [0, 0, 0]
     background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
 
     """ GUI """
@@ -162,9 +147,9 @@ def training(pointcloudPath):
             progress_bar.set_postfix(pbar_dict)
 
             # Log and save
-            training_report(tb_writer, iteration, tb_dict,
-                            scene, render_fn, pipe=pipe,
-                            bg_color=background, dict_params=pbr_kwargs)
+            # training_report(tb_writer, iteration, tb_dict,
+            #                 scene, render_fn, pipe=pipe,
+            #                 bg_color=background, dict_params=pbr_kwargs)
 
             # densification
             
@@ -181,8 +166,7 @@ def training(pointcloudPath):
                     gaussians.densify_and_prune(opt.densify_grad_threshold, 0.005, scene.cameras_extent, size_threshold,
                                                 densify_grad_normal_threshold)
 
-                if iteration % opt.opacity_reset_interval == 0 or (
-                        dataset.white_background and iteration == opt.densify_from_iter):
+                if iteration % opt.opacity_reset_interval == 0:
                     gaussians.reset_opacity()
                     
             # Optimizer step
@@ -213,8 +197,7 @@ def training(pointcloudPath):
 
                     print("[ITER {}] Saving {} Checkpoint".format(iteration, com_name))
 
-    if dataset.eval:
-        eval_render(scene, gaussians, render_fn, pipe, background, opt, pbr_kwargs)
+    eval_render(scene, gaussians, render_fn, pipe, background, opt, pbr_kwargs)
 
 
 def training_report(tb_writer, iteration, tb_dict, scene: Scene, renderFunc, pipe,

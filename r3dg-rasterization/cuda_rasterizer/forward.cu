@@ -13,6 +13,8 @@
 #include "auxiliary.h"
 #include <cooperative_groups.h>
 #include <cooperative_groups/reduce.h>
+#include<iostream>
+#include<vector>
 namespace cg = cooperative_groups;
 
 // Forward method for converting the input spherical harmonics
@@ -362,7 +364,9 @@ renderCUDA(
             float weight = alpha * T;
 			// Eq. (3) from 3D Gaussian splatting paper.
 			for (int ch = 0; ch < CHANNELS; ch++)
+			{
 				C[ch] += colors[collected_id[j] * CHANNELS + ch] * weight;
+			}
 
 			for (int ch = 0; ch < S; ch++)
 				F[ch] += features[collected_id[j] * S + ch] * weight;
@@ -510,6 +514,16 @@ void FORWARD::render(
 	float* out_weights
 	)
 {
+	// //在这个地方打印一下block信息
+	// std::vector<uint2> cpu_ranges(256);
+	// //把range数据转到cpu
+	// cudaMemcpy(cpu_ranges.data(),ranges,sizeof(uint2)*256,cudaMemcpyDeviceToHost);
+	// //打印一下各种范围信息
+	// for(int i=0;i<256;++i)
+	// {
+	// 	auto& temp_range = cpu_ranges[i];
+	// 	std::cout<<temp_range.x<<" "<<temp_range.y<<std::endl;
+	// }
 	renderCUDA<NUM_CHANNELS> << <grid, block >> > (
 		ranges,
 		point_list,

@@ -30,19 +30,20 @@ class FakeArgs:
         self.gui = True
         #处理debug的东西，一般是用不到的
         self.debug_from = -1
-        self.save_interval = 5000
+        self.save_interval = 1000
         #迭代的总次数
-        self.iterations = 20000
+        self.iterations = 1000
         #记录checkpoint的位置
         self.checkpoint_interval = 100000
 
 def training(pointcloudPath):
     #初始化高斯模型的壳子
-    render_type = 'render'
+    render_type = 'neilf'
+    # render_type = 'render'
     sh_degree = 3
     gaussians = GaussianModel(sh_degree, render_type=render_type)
     #加载三维高斯
-    gaussians.load_ply(pointcloudPath)
+    # gaussians.load_ply(pointcloudPath)
     #尝试加载一个简单的scene
     scene = Scene(None,gaussians,custom_load = True)
     
@@ -53,6 +54,7 @@ def training(pointcloudPath):
     parser = ArgumentParser(description="Training script parameters")
     #初始化优化器参数
     opt = OptimizationParams(parser)
+    opt.iterations = 1000
     #初始化训练的优化器
     gaussians.training_setup(opt)
     #准备后续会用到的args
@@ -197,7 +199,7 @@ def training(pointcloudPath):
 
                     print("[ITER {}] Saving {} Checkpoint".format(iteration, com_name))
 
-    eval_render(scene, gaussians, render_fn, pipe, background, opt, pbr_kwargs)
+    # eval_render(scene, gaussians, render_fn, pipe, background, opt, pbr_kwargs)
 
 
 def training_report(tb_writer, iteration, tb_dict, scene: Scene, renderFunc, pipe,

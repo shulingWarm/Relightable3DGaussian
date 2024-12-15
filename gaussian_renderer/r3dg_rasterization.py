@@ -112,6 +112,7 @@ class _RasterizeGaussians(torch.autograd.Function):
             num_rendered, num_contrib, color, opacity, depth, feature, normal, surface_xyz, weights, radii, geomBuffer, binningBuffer, imgBuffer = _C.rasterize_gaussians(
                 *args)
         
+        
         # Keep relevant tensors for backward
         ctx.raster_settings = raster_settings
         ctx.num_rendered = num_rendered

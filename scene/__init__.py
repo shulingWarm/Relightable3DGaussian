@@ -35,7 +35,7 @@ class Scene:
         """
         # 判断是不是使用自定义的加载方法
         if(custom_load):
-            self.customLoad()
+            self.customLoad(gaussians)
             return
         self.model_path = args.model_path
         self.loaded_iter = None
@@ -105,13 +105,15 @@ class Scene:
         self.scene_info = scene_info
 
     # 自己实现的载入scene的方法，主要是用于debug的
-    def customLoad(self):
+    def customLoad(self,gaussians):
         #当前工程的模型位置
         self.model_path = "/media/zzh/data/temp/RelightModelPath/"
         #读取colmap的工程
-        colmap_project = sceneLoadTypeCallbacks["Colmap"]("/media/zzh/data/temp/phone_workspace/",
-            "/media/zzh/data/temp/images/", False,
+        colmap_project = sceneLoadTypeCallbacks["Colmap"]("/media/zzh/data/temp/building_undistort/FilterSparse/",
+            "/media/zzh/data/temp/south-building/images/", False,
             debug=False)
+        #把三维高斯的信息存储到self里面，后面存储的时候会用到
+        self.gaussians = gaussians
         #读取点云内容
         with open(colmap_project.ply_path, 'rb') as src_file, open(os.path.join(self.model_path, "input.ply"),
                                                                'wb') as dest_file:

@@ -121,7 +121,8 @@ if __name__ == '__main__':
     # rendering
     capture_dir = args.output
     os.makedirs(capture_dir, exist_ok=True)
-    capture_list = [str.strip() for str in args.capture_list.split(",")]
+    # capture_list = [str.strip() for str in args.capture_list.split(",")]
+    capture_list = ['points','render','pbr_env']
     for capture_type in capture_list:
         capture_type_dir = os.path.join(capture_dir, capture_type)
         os.makedirs(capture_type_dir, exist_ok=True)

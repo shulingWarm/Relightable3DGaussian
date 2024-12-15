@@ -229,6 +229,8 @@ int CudaRasterizer::Rasterizer::forward(
     int* radii,
 	bool debug)
 {
+
+	std::cout<<"Calling CudaRasterizer::Rasterizer::forward"<<std::endl;
 	const float focal_y = height / (2.0f * tan_fovy);
 	const float focal_x = width / (2.0f * tan_fovx);
 

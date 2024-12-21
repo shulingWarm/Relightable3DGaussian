@@ -29,6 +29,8 @@ namespace cg = cooperative_groups;
 #include "auxiliary.h"
 #include "forward.h"
 #include "backward.h"
+#include<iostream>
+#include<vector>
 
 // Helper function to find the next-highest bit of the MSB
 // on the CPU.
@@ -229,8 +231,6 @@ int CudaRasterizer::Rasterizer::forward(
     int* radii,
 	bool debug)
 {
-
-	std::cout<<"Calling CudaRasterizer::Rasterizer::forward"<<std::endl;
 	const float focal_y = height / (2.0f * tan_fovy);
 	const float focal_x = width / (2.0f * tan_fovx);
 

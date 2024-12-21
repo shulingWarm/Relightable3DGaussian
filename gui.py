@@ -164,9 +164,9 @@ class GUI:
     def step(self):
         self.start.record()
         cam_list = self.cam.view.tolist()
-        for big_list in cam_list:
-            for each_element in big_list:
-                print(each_element,',')
+        for idCol in range(4):
+            for each_list in cam_list:
+                print(each_list[idCol],',')
         exit()
         render_pkg = self.render_fn(viewpoint_camera=self.custom_cam, **self.render_kwargs)
         self.end.record()

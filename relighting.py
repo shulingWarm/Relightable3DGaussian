@@ -160,6 +160,7 @@ if __name__ == '__main__':
         w2c = np.array(cam_info, dtype=np.float32).reshape(4, 4)
 
         R = w2c[:3, :3].T
+        #R = w2c[:3, :3]
         T = w2c[:3, 3]
         custom_cam = Camera(colmap_id=0, R=R, T=T,
                             FoVx=fovx, FoVy=fovy, fx=None, fy=None, cx=None, cy=None,
